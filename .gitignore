@@ -1,0 +1,65 @@
+# ---------------------------------------------------------------------------
+# LaTeX build artefacts (proposal/ and any future report/)
+# NOTE: proposal/main.pdf is a required deliverable and is NOT ignored.
+# ---------------------------------------------------------------------------
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.synctex.gz
+*.toc
+*.xdv
+*.run.xml
+*.bcf
+*.nav
+*.snm
+*.vrb
+
+# ---------------------------------------------------------------------------
+# CUDA / C++ build output
+# ---------------------------------------------------------------------------
+*.o
+*.obj
+*.so
+*.a
+*.d
+build/
+bin/
+# Compiled microbenchmarks (rebuild with `make` in proposal/hwbench)
+proposal/hwbench/devinfo
+proposal/hwbench/bw_pcie
+proposal/hwbench/bw_gpu
+
+# ---------------------------------------------------------------------------
+# Profiling output (Nsight Systems / Compute)
+# ---------------------------------------------------------------------------
+*.qdrep
+*.qdstrm
+*.nsys-rep
+*.ncu-rep
+*.sqlite
+
+# ---------------------------------------------------------------------------
+# Datasets and experiment output -- too large for git
+# ---------------------------------------------------------------------------
+data/
+datasets/
+results/
+*.csv
+*.npy
+*.bz2
+*.tar.gz
+
+# ---------------------------------------------------------------------------
+# Editor / OS noise
+# ---------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
