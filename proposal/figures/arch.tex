@@ -1,0 +1,54 @@
+% Block diagram of the proposed system.
+% Drawn at natural size in mm and clamped to one sigconf column by \resizebox,
+% so it can never overflow regardless of the class's column width.
+\resizebox{\columnwidth}{!}{%
+\begin{tikzpicture}[
+    x=1mm, y=1mm, font=\small,
+    box/.style   = {draw, rounded corners=0.6mm, align=center, inner sep=1pt},
+    wide/.style  = {box, minimum width=78mm, minimum height=6mm},
+    strat/.style = {box, minimum width=18mm, minimum height=12mm,
+                    fill=green!12},
+    ar/.style    = {-{Latex[length=1.6mm]}, thick},
+  ]
+
+  % ---------- input / selector ----------
+  \node[wide, fill=black!6] (in)  at (0,  0)
+       {Input: $X$ ($n\times d$), $k$, GPU memory budget, host memory};
+  \node[wide, fill=blue!10] (sel) at (0,-11)
+       {Strategy choice --- optional measured selector};
+
+  % ---------- the four strategies ----------
+  \node[strat] (sA) at (-28.5,-26) {\textbf{In-mem}\\full $K$\\$4n^2$};
+  \node[strat] (sB) at ( -9.5,-26) {\textbf{S1}\\sym.\ tiles\\$2n^2$};
+  \node[strat] (sC) at (  9.5,-26) {\textbf{S2}\\out-of-core\\streaming};
+  \node[strat] (sD) at ( 28.5,-26) {\textbf{S3}\\fused\\$O(nd{+}nk)$};
+
+  % ---------- host memory, beside the strategy row ----------
+  \node[box, fill=red!10, minimum width=15mm, minimum height=12mm]
+       (hm) at (-48,-26) {\textbf{Host}\\\textbf{memory}\\(pinned)};
+
+  % ---------- S and the shared assignment module ----------
+  \node[box, fill=black!6, minimum width=30mm, minimum height=6mm]
+       (S) at (0,-42) {$S$\ \ ($n\times k$)};
+  \node[wide, fill=orange!16] (asg) at (0,-53)
+       {\textbf{Shared assignment module:}\ \
+        $\lVert c_j\rVert^2$,\ \ $D$,\ \ $\arg\min_j$,\ \ $\lvert L_j\rvert$};
+
+  % ---------- flow ----------
+  \draw[ar] (in) -- (sel);
+  \foreach \s in {sA,sB,sC,sD} \draw[ar] (sel.south) -- (\s.north);
+  \foreach \s in {sA,sB,sC,sD} \draw[ar] (\s.south) -- (S.north);
+  \draw[ar] (S) -- (asg);
+
+  % ---------- host <-> S2 over PCIe ----------
+  \draw[{Latex[length=1.6mm]}-{Latex[length=1.6mm]}, thick, dashed, red!65!black]
+       (hm.south) -- (-48,-36)
+       -- node[midway, below, font=\scriptsize, text=red!65!black]
+          {PCIe, double-buffered} (6.5,-36) -- ([xshift=-3mm]sC.south);
+
+  % ---------- iteration loop ----------
+  \draw[ar] (asg.east) -- (42,-53) -- (42,-26)
+       node[midway, right, font=\scriptsize, align=left]
+       {new $c(i)$\\(30 iters)} -- (sD.east);
+
+\end{tikzpicture}}

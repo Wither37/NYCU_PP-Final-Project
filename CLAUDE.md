@@ -47,9 +47,11 @@ count as a single day.
 ```
 proposal/
   main.tex          proposal source (ACM sigconf, XeLaTeX)
-  refs.bib          bibliography -- 7 entries, all verified; do not add unverified ones
+  refs.bib          bibliography -- 8 entries, all verified; do not add unverified ones
   figures/arch.tex  TikZ block diagram, \input from main.tex
-  Makefile          `make` -> main.pdf ; `make clean` ; `make purge`
+  Makefile          `make` -> main.pdf + Proposal_6.pdf ; `make clean` ; `make purge`
+                    submission filename rule is Proposal_<Group_id>.pdf; we are
+                    group 6, override with `make GROUP=06`
   .latexmkrc        forces XeLaTeX (pdf_mode = 5)
   hardware.md       hardware report + microbenchmark results + all derived arithmetic
   hwbench/          CUDA microbenchmarks (devinfo, bw_pcie, bw_gpu) + run.sh
@@ -114,21 +116,28 @@ Other students run long jobs on most GPUs. Before any GPU work:
   *expected* or *predicted*; keep it that way until there are real timings.
 - Fixed 30 iterations per clustering run, matching the Popcorn evaluation, so
   timings compare like with like.
+- Core deliverables are the shared framework, the CPU reference, S2 and S3.
+  **S1 and the automatic selector are stretch goals**, and the proposal says so.
+- Bellavita et al. 2026 (arXiv:2601.17136), "Communication-Avoiding Linear
+  Algebraic Kernel K-Means on GPUs", is the Popcorn authors' own follow-up: it
+  solves the same memory limit with **multi-GPU** distributed algorithms and
+  mentions a single-GPU sliding-window baseline that recomputes kernel blocks.
+  Our niche is the single-GPU case; cite and position against it everywhere.
 
 ## The four strategies (all compute the same `S`, `n x k`)
 
 | | storage for `K` | bound by |
 |---|---|---|
 | In-memory | `4n^2` on GPU | GPU memory |
-| S1 symmetric tiles | `2n^2` on GPU | GPU memory (only a `sqrt(2)` gain) |
+| S1 symmetric tiles | `2n^2` on GPU | GPU memory (only a `sqrt(2)` gain); **stretch goal** |
 | S2 out-of-core | `2n^2` in pinned host RAM, streamed | PCIe bandwidth |
 | S3 fused recompute | none; `O(nd + nk)` total | FP32 throughput |
 
 Cost model: `T_in-mem ~ 4n^2/B_gpu`, `T_S2 ~ 2n^2/B_pcie`, `T_S3 ~ 2n^2 d/F_eff`.
 Crossovers: S3 beats S2 when `d < F_eff/B_pcie = 737`; S3 beats in-memory when
 `d < 2*F_eff/B_gpu = 57`. The `d < 57` crossover is the interesting claim — it
-sits among real datasets (Acoustic `d=50`, Letter `d=16` below; MNIST `d=780`
-above).
+sits among real datasets (Acoustic `d=50`, Letter `d=26` as reported by Popcorn,
+both below; MNIST `d=780` above).
 
 ## Conventions
 
