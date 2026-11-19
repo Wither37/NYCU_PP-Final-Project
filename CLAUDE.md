@@ -126,7 +126,10 @@ Shared server. **10x RTX A6000 (48 GB, cc 8.6, 84 SMs, PCIe Gen4 x16)**,
 
 ### Shared-machine etiquette — follow this every time
 
-Other students run long jobs on most GPUs. Before any GPU work:
+Other students run long jobs on most GPUs. **Course rule (from the professor):
+use at most one GPU at a time** — never run jobs on two cards concurrently,
+including from different team members' sessions. `scripts/gpu7.sh` runs one
+job on one card. Before any GPU work:
 
 1. Run `nvidia-smi`, pick the GPU with the **lowest utilization** and most free
    memory, and set `CUDA_VISIBLE_DEVICES` to it. `proposal/hwbench/run.sh` does
