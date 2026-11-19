@@ -55,7 +55,50 @@ proposal/
   .latexmkrc        forces XeLaTeX (pdf_mode = 5)
   hardware.md       hardware report + microbenchmark results + all derived arithmetic
   hwbench/          CUDA microbenchmarks (devinfo, bw_pcie, bw_gpu) + run.sh
+src/
+  strategy.h        THE interface: SStrategy::setup / compute_S, upper_tiles()
+  driver.{h,cu}     full GPU run (upload, setup, iterations, timing) + test hook
+  assign.{h,cu}     shared assignment module, Eqs. (2)-(4), D in double
+  tile_kernels.*    build a block of K from X; accumulate a block into S
+                    by rows (accum_rows) or mirrored columns (accum_cols)
+  s_inmem.cu        full K on the GPU (Popcorn layout, our kernels)
+  s1_symtiles.cu    upper-triangular tiles on the GPU (stretch goal)
+  s2_outofcore.cu   upper-triangular tiles in pinned host RAM, streamed
+  cpu_ref.*         OpenMP reference + CPU baseline (double accumulation)
+  budget.*          DeviceBudget / HostBudget, BudgetError
+  data.*            synthetic blobs, libSVM loader, KKM1 binary, initial labels
+  main.cu           `kkm` CLI (--help), prints a summary, --json report
+tests/test_kkm.cu   strategies vs CPU reference, assignment rules, budgets
+scripts/pc.sh       build locally, run on the Windows test PC (interim)
+tools/fetch_cuda.sh project-local nvcc 12.4 into .cuda/ for GPU-less machines
 ```
+
+## Building and testing the code
+
+```bash
+make                        # bin/kkm, bin/test_kkm for sm_86 (gpu7)
+make test                   # needs a GPU; make test-cpu runs without one
+make NVCC=.cuda/bin/nvcc ARCH="86 89"   # local compiler, also sm_89
+./bin/kkm --strategy s2 --synthetic 200000 50 --k 10 --budget-gb 24 --json r.json
+```
+
+`kkm` exits 3 and writes `"status": "over_budget"` when a configuration does
+not fit; that is an expected result (e.g. in-memory at large n), not a crash.
+
+### Contract for a strategy (S3 plugs in here)
+
+- Implement `SStrategy` in `src/s3_*.cu`, add a `make_s3` factory line in
+  `src/strategy.cu`, add the file to `LIB_SRCS` and `"s3"` to the strategy
+  lists in `tests/test_kkm.cu`.
+- `X` is n x d fp32 row-major on the device (driver-owned); `S` is n x k fp32
+  row-major; labels are `int[n]`. `compute_S` must overwrite every entry of
+  `S` (the test poisons it first) and be complete with respect to the stream
+  it is given.
+- Allocate device memory only through `ctx.dev`, pinned host memory only
+  through `ctx.host`, so budgets are enforced.
+- Kernel function: `kernel_from_dot` in `src/common.h`, `(x.y + 1)^2`.
+- Initial labels: `initial_labels(n, k, seed ^ 0x5eed)`; empty clusters are
+  excluded from the argmin; ties go to the smallest cluster index.
 
 ## Building the proposal
 
