@@ -67,3 +67,6 @@ results/
 *.swp
 *~
 .DS_Store
+
+# Project-local CUDA compiler fetched by tools/fetch_cuda.sh
+.cuda/
