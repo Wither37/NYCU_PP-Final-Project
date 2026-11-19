@@ -38,6 +38,7 @@ proposal/Proposal_*.pdf
 proposal/hwbench/devinfo
 proposal/hwbench/bw_pcie
 proposal/hwbench/bw_gpu
+proposal/hwbench/pin_limit
 
 # ---------------------------------------------------------------------------
 # Profiling output (Nsight Systems / Compute)
