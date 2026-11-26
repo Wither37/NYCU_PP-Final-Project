@@ -69,6 +69,12 @@ src/
   data.*            synthetic blobs, libSVM loader, KKM1 binary, initial labels
   main.cu           `kkm` CLI (--help), prints a summary, --json report
 tests/test_kkm.cu   strategies vs CPU reference, assignment rules, budgets
+experiments/        sweep specs (*.json) + README.md: how to run, every parameter
+                    vs_n, vs_d, vs_k, cpu_threads (gpu7); smoke, cpu_threads_local (laptop)
+scripts/sweep.py    run a spec through bin/kkm -> results/<name>/<run>.json (resumable)
+scripts/collect.py  results/<name>/*.json -> results/<name>/runs.csv, one row per run
+scripts/plot.py     runs.csv -> figure (one line per strategy, median over reps)
+scripts/gpu7.sh     sync + build on gpu7, pick the idlest GPU, run one command
 scripts/pc.sh       build locally, run on the Windows test PC (interim)
 tools/fetch_cuda.sh project-local nvcc 12.4 into .cuda/ for GPU-less machines
 ```
@@ -84,6 +90,36 @@ make NVCC=.cuda/bin/nvcc ARCH="86 89"   # local compiler, also sm_89
 
 `kkm` exits 3 and writes `"status": "over_budget"` when a configuration does
 not fit; that is an expected result (e.g. in-memory at large n), not a crash.
+The JSON report writes doubles at round-trip precision (17 significant
+digits, `null` for NaN/Inf) and always records the nominal budgets
+(`budget_bytes`, `host_budget_bytes`), also for over-budget runs.
+
+### Running experiments
+
+Full guide, every parameter and option: **`experiments/README.md`**.
+
+```bash
+python3 scripts/sweep.py experiments/vs_n.json --dry-run   # list the runs first
+scripts/gpu7.sh python3 scripts/sweep.py experiments/vs_n.json
+python3 scripts/collect.py results/vs_n                     # -> results/vs_n/runs.csv
+python3 scripts/plot.py results/vs_n/runs.csv --x n --filter p_budget_gb=24 \
+    --logx --logy -o plots/vs_n_24g.pdf
+```
+
+- A spec is `{"name", "reps", "timeout_s", "base": {...}, "grid": {...}}`; the
+  grid is a Cartesian product over kkm parameters (see `scripts/sweep.py`).
+- Every run report gets a `meta` object: parameters, exit code, git commit,
+  and the GPU utilization/memory and host load **right before and after** the
+  run. A GPU run that starts with utilization >= 10% is flagged `contended`,
+  and `plot.py` drops it (etiquette rule 4). Rerun those once the GPU is idle.
+- The sweep resumes: runs already `ok`/`over_budget` are skipped. Repetitions
+  are interleaved so drift on the shared machine does not hit one config.
+- Iteration times in `runs.csv` (`iter_ms_med`, `s_ms_med`) are medians over
+  iterations 2..N; iteration 1 is kept apart as `iter_ms_first` (warm-up).
+- `results/`, `plots/` and `*.csv` are git-ignored. Copy the figures the
+  report uses into the report directory.
+- Python 3.8+ stdlib for `sweep.py`/`collect.py`; `plot.py` needs matplotlib.
+- When S3 exists, add `"s3"` to the `strategy` lists of the specs.
 
 ### Contract for a strategy (S3 plugs in here)
 

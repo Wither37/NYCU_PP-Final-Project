@@ -55,6 +55,8 @@ proposal/hwbench/pin_limit
 data/
 datasets/
 results/
+# Figures made by scripts/plot.py; copy the ones the report uses into report/.
+plots/
 *.csv
 *.npy
 *.bz2

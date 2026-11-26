@@ -1,0 +1,7 @@
+{
+  "name": "smoke",
+  "reps": 2,
+  "timeout_s": 600,
+  "base": {"d": 16, "k": 10, "budget_gb": 0.25, "host_budget_gb": 2, "tile": 1024},
+  "grid": {"strategy": ["cpu", "inmem", "s1", "s2"], "n": [2000, 4000, 8000]}
+}

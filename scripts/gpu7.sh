@@ -19,7 +19,9 @@ rsync -a --delete --exclude .git --exclude .cuda --exclude build --exclude bin \
 
 # The command is passed as a single string, so quote arguments with spaces.
 CMD=$(printf '%q ' "$@")
-ssh "$HOST" "GPU='${GPU:-}' bash -s" <<EOF
+# .git is not synced; pass the commit so run reports (scripts/sweep.py) record it.
+KKM_GIT=$(git describe --always --dirty 2>/dev/null || echo unknown)
+ssh "$HOST" "GPU='${GPU:-}' KKM_GIT='$KKM_GIT' bash -s" <<EOF
 set -euo pipefail
 cd "$REMOTE"
 export PATH=/usr/local/cuda-12.4/bin:\$PATH

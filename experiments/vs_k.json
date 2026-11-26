@@ -1,0 +1,7 @@
+{
+  "name": "vs_k",
+  "reps": 3,
+  "timeout_s": 3600,
+  "base": {"n": 40000, "d": 50, "budget_gb": 48},
+  "grid": {"strategy": ["inmem", "s1", "s2"], "k": [10, 50, 100]}
+}
