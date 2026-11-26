@@ -3,7 +3,7 @@ NVCC  ?= nvcc
 ARCH  ?= sm_86
 FLAGS ?= -O3 -arch=$(ARCH)
 
-BINS = devinfo bw_pcie bw_gpu
+BINS = devinfo bw_pcie bw_gpu pin_limit
 
 all: $(BINS)
 
