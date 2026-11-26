@@ -5,7 +5,9 @@
 #include <cmath>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <numeric>
 #include <sstream>
 
@@ -57,10 +59,22 @@ double mean(const std::vector<double>& v) {
   return v.empty() ? 0 : std::accumulate(v.begin(), v.end(), 0.0) / v.size();
 }
 
+// Round-trip precision: the default 6 significant digits would make objectives
+// from different implementations look identical when they are not.
+constexpr int kJsonDigits = std::numeric_limits<double>::max_digits10;
+
+// JSON has no NaN/Inf; write null so the report stays parseable.
+std::string json_num(double v) {
+  if (!std::isfinite(v)) return "null";
+  std::ostringstream o;
+  o << std::setprecision(kJsonDigits) << v;
+  return o.str();
+}
+
 std::string json_array(const std::vector<double>& v) {
   std::ostringstream o;
   o << "[";
-  for (size_t i = 0; i < v.size(); ++i) o << (i ? ", " : "") << v[i];
+  for (size_t i = 0; i < v.size(); ++i) o << (i ? ", " : "") << json_num(v[i]);
   return o.str() + "]";
 }
 
@@ -141,9 +155,12 @@ int main(int argc, char** argv) {
             << " k=" << k << " iters=" << iters << " strategy=" << strategy << "\n";
 
   std::ostringstream js;
+  js << std::setprecision(kJsonDigits);
   js << "{\n  \"dataset\": \"" << json_escape(ds.name) << "\", \"n\": " << ds.n
      << ", \"d\": " << ds.d << ", \"k\": " << k << ", \"iters\": " << iters
-     << ", \"seed\": " << seed << ",\n  \"strategy\": \"" << strategy << "\"";
+     << ", \"seed\": " << seed << ",\n  \"strategy\": \"" << strategy << "\""
+     // Nominal budgets are recorded even when the run ends over_budget.
+     << ", \"budget_bytes\": " << dev_budget << ", \"host_budget_bytes\": " << host_budget;
 
   std::vector<int> labels;
   std::vector<IterStats> its;
@@ -222,7 +239,8 @@ int main(int argc, char** argv) {
     double o_gpu = its.back().objective, o_cpu = ref.iters.back().objective;
     double rel = std::fabs(o_gpu - o_cpu) / std::max(1e-30, std::fabs(o_cpu));
     std::printf("check vs cpu: label agreement %.6f | objective rel diff %.3g\n", a, rel);
-    js << ",\n  \"check_label_agreement\": " << a << ", \"check_objective_rel\": " << rel;
+    js << ",\n  \"check_label_agreement\": " << json_num(a)
+       << ", \"check_objective_rel\": " << json_num(rel);
   }
   js << "\n}\n";
 

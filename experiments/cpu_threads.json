@@ -1,0 +1,7 @@
+{
+  "name": "cpu_threads",
+  "reps": 3,
+  "timeout_s": 7200,
+  "base": {"strategy": "cpu", "n": 20000, "d": 50, "k": 10},
+  "grid": {"threads": [1, 2, 4, 8, 16, 32, 64]}
+}
